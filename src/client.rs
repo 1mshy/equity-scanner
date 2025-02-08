@@ -1,3 +1,5 @@
+use crate::utils::formatter::{self, historical_url, YAHOO_BASE_URL};
+use crate::utils::structs::HistoricalData;
 use reqwest::Client;
 use serde_json::Value;
 use std::error::Error;
@@ -49,7 +51,15 @@ impl YahooFinanceClient {
         }
     }
 
-    pub async fn fetch_url_summary(&mut self, url: &str) -> Result<Value, Box<dyn Error>> {
+    pub async fn fetch_historical(
+        &mut self,
+        ticker: &str,
+    ) -> Result<HistoricalData, Box<dyn Error>> {
+        let request = self.crumbed_request(&historical_url(ticker)).await?;
+        Ok(HistoricalData::new(&request))
+    }
+
+    pub async fn crumbed_request(&mut self, url: &str) -> Result<Value, Box<dyn Error>> {
         self.ensure_crumb_valid().await?;
         let crumb = self.crumb.as_ref().ok_or("Crumb not found")?;
         let full_url = format!("{}&crumb={}", url, crumb);
@@ -60,21 +70,6 @@ impl YahooFinanceClient {
             .header("Accept", "application/json")
             .send()
             .await?;
-
-        // if response.status().as_u16() == 403 {
-        //     // Crumb might be invalid, refresh and retry once
-        //     self.refresh_crumb().await?;
-        //     let crumb = self.crumb.as_ref().ok_or("Crumb not found after refresh")?;
-        //     let full_url = format!("{}&crumb={}", url, crumb);
-        //     let retry_response = self
-        //         .client
-        //         .get(&full_url)
-        //         .header("Accept", "application/json")
-        //         .send()
-        //         .await?;
-        //     let text = retry_response.text().await?;
-        //     return Ok(serde_json::from_str(&text)?);
-        // }
 
         let text = response.text().await?;
         Ok(serde_json::from_str(&text)?)
@@ -89,6 +84,6 @@ impl YahooFinanceClient {
             symbol, crumb
         );
 
-        self.fetch_url_summary(&url).await
+        self.crumbed_request(&url).await
     }
 }
