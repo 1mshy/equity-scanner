@@ -1,17 +1,16 @@
-use crate::utils::formatter::{self, historical_url, YAHOO_BASE_URL};
+use crate::utils::formatter::historical_url;
 use crate::utils::structs::HistoricalData;
 use reqwest::Client;
 use serde_json::Value;
 use std::error::Error;
 use std::time::{Duration, Instant};
-
+/// Client used for holding data for a ticker. All in one package for requesting and analysing data
 #[derive(Debug)]
 pub struct YahooFinanceClient {
     client: Client,
     crumb: Option<String>,
     last_refresh: Option<Instant>,
 }
-
 impl YahooFinanceClient {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
         let client = Client::builder()
@@ -27,7 +26,7 @@ impl YahooFinanceClient {
         })
     }
 
-    pub async fn refresh_crumb(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn refresh_crumb(&mut self) -> Result<(), Box<dyn Error>> {
         self.client.get("https://fc.yahoo.com").send().await?;
 
         let crumb = self
@@ -43,14 +42,15 @@ impl YahooFinanceClient {
         Ok(())
     }
 
-    pub async fn ensure_crumb_valid(&mut self) -> Result<(), Box<dyn Error>> {
+    /// Ensures the crumb is valid before procceding
+    async fn ensure_crumb_valid(&mut self) -> Result<(), Box<dyn Error>> {
         let crumb_ttl = Duration::from_secs(15 * 60); // 15 minutes
         match (self.crumb.as_ref(), self.last_refresh) {
             (Some(_), Some(t)) if t.elapsed() < crumb_ttl => Ok(()),
             _ => self.refresh_crumb().await,
         }
     }
-
+    /// Fetches the historical data from every day since inception of the ticker price data.
     pub async fn fetch_historical(
         &mut self,
         ticker: &str,
@@ -58,8 +58,25 @@ impl YahooFinanceClient {
         let request = self.crumbed_request(&historical_url(ticker)).await?;
         Ok(HistoricalData::new(&request))
     }
+    /// Uses current data and formats it into HistoricalData
+    pub async fn from_historical(&mut self, data:&str) -> Result<HistoricalData, Box<dyn Error>> {
+        let data = &serde_json::from_str(data)?;
+        Ok(HistoricalData::new(data))
+    }
+    /// Fetches a summary of what the company behind the ticker does.
+    pub async fn fetch_quote_summary(&mut self, symbol: &str) -> Result<Value, Box<dyn Error>> {
+        self.ensure_crumb_valid().await?;
 
-    pub async fn crumbed_request(&mut self, url: &str) -> Result<Value, Box<dyn Error>> {
+        let crumb = self.crumb.as_ref().ok_or("Crumb not found")?;
+        let url = format!(
+            "https://query1.finance.yahoo.com/v10/finance/quoteSummary/{}?modules=assetProfile%2CfinancialData&crumb={}",
+            symbol, crumb
+        );
+
+        self.crumbed_request(&url).await
+    }
+
+    async fn crumbed_request(&mut self, url: &str) -> Result<Value, Box<dyn Error>> {
         self.ensure_crumb_valid().await?;
         let crumb = self.crumb.as_ref().ok_or("Crumb not found")?;
         let full_url = format!("{}&crumb={}", url, crumb);
@@ -73,17 +90,5 @@ impl YahooFinanceClient {
 
         let text = response.text().await?;
         Ok(serde_json::from_str(&text)?)
-    }
-
-    pub async fn fetch_quote_summary(&mut self, symbol: &str) -> Result<Value, Box<dyn Error>> {
-        self.ensure_crumb_valid().await?;
-
-        let crumb = self.crumb.as_ref().ok_or("Crumb not found")?;
-        let url = format!(
-            "https://query1.finance.yahoo.com/v10/finance/quoteSummary/{}?modules=assetProfile%2CfinancialData&crumb={}",
-            symbol, crumb
-        );
-
-        self.crumbed_request(&url).await
     }
 }

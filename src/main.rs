@@ -12,7 +12,7 @@ async fn main() {
     let output = client.fetch_quote_summary("AAPL").await.unwrap();
 
     let history = client.fetch_historical("AAPL").await.unwrap();
-    println!("{:?}", history.metadata);
+    println!("{:?}", history.volume);
     // println!("{:?}", client);
     // println!("{:?}", output);
 }
