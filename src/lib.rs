@@ -1,3 +1,4 @@
 /// Hello world!
 pub mod client;
-mod utils;
+pub mod equity;
+pub mod utils;

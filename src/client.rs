@@ -1,5 +1,5 @@
-use crate::utils::formatter::{historical_url, year_url};
-use crate::utils::indicators::{calculate_rsi, rsi};
+use crate::equity::Equity;
+use crate::utils::formatter::year_url;
 use crate::utils::structs::HistoricalData;
 use reqwest::Client;
 use serde_json::Value;
@@ -53,20 +53,19 @@ impl YahooFinanceClient {
         }
     }
     /// Fetches the historical data from every day since inception of the ticker price data.
-    pub async fn fetch_historical(
-        &mut self,
-        ticker: &str,
-    ) -> Result<HistoricalData, Box<dyn Error>> {
+    pub async fn fetch_historical(&mut self, ticker: &str) -> Result<Equity, Box<dyn Error>> {
         let request = self.crumbed_request(&year_url(ticker)).await?;
         let historical_data = HistoricalData::new(&request);
-        Ok(historical_data)
+        Ok(Equity::new(ticker.to_owned(), historical_data))
     }
     /// Uses current data and formats it into HistoricalData
-    pub async fn from_historical(&mut self, data: &str) -> Result<HistoricalData, Box<dyn Error>> {
-        let data = &serde_json::from_str(data)?;
-        let historical_data = HistoricalData::new(data);
-        Ok(historical_data)
-    }
+    // pub async fn from_historical(&mut self, data: &str) -> Result<Equity, Box<dyn Error>> {
+    //     let data = &serde_json::from_str(data)?;
+    //     let historical_data = HistoricalData::new(data);
+    //     Ok(Equity {
+    //         historical_data, ticker: ticker.to_owned()
+    //     })
+    // }
     /// Fetches a summary of what the company behind the ticker does.
     pub async fn fetch_quote_summary(&mut self, symbol: &str) -> Result<Value, Box<dyn Error>> {
         self.ensure_crumb_valid().await?;
@@ -94,20 +93,5 @@ impl YahooFinanceClient {
 
         let text = response.text().await?;
         Ok(serde_json::from_str(&text)?)
-    }
-
-    pub fn current_rsi(&mut self, historical_data: &HistoricalData, window: usize) -> Result<f64, Box<dyn Error>> {
-        let all_rsi_vals = calculate_rsi(&historical_data.close, window);
-        Ok(all_rsi_vals.last().unwrap().clone())
-    }
-
-    pub async fn analyse(
-        &mut self,
-        historical_data: &HistoricalData,
-    ) -> Result<bool, Box<dyn Error>> {
-        println!("fdsfsdf");
-        let rsa_vals = rsi(&historical_data.close, 14);
-        // println!("{:?}", rsa_vals);
-        Ok(true)
     }
 }

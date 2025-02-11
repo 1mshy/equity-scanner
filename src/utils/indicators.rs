@@ -33,33 +33,3 @@ pub fn calculate_rsi(prices: &Vec<f64>, period: usize) -> Vec<f64> {
 
     rsi_values
 }
-pub fn rsi(prices: &Vec<f64>, window: usize) -> Vec<f64> {
-    if prices.len() < window {
-        return vec![];
-    }
-
-    let mut gains = vec![0.0; prices.len()];
-    let mut losses = vec![0.0; prices.len()];
-
-    for i in 1..prices.len() {
-        let change = prices[i] - prices[i - 1];
-        if change > 0.0 {
-            gains[i] = change;
-        } else {
-            losses[i] = -change;
-        }
-    }
-
-    let mut rsi_values = vec![0.0; prices.len() - window];
-
-    for i in 0..=(prices.len() - window - 1) {
-        let avg_gain: f64 = gains[i + 1..i + 1 + window].iter().sum::<f64>() / window as f64;
-        let avg_loss: f64 = losses[i + 1..i + 1 + window].iter().sum::<f64>() / window as f64;
-
-        let rs = if avg_loss == 0.0 { f64::INFINITY } else { avg_gain / avg_loss };
-        let rsi = 100.0 - (100.0 / (1.0 + rs));
-        rsi_values[i] = rsi;
-    }
-
-    rsi_values
-}

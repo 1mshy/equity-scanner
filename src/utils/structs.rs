@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HistoricalData {
     pub metadata: Value,
     pub timestamp: Vec<u64>,
