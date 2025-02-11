@@ -1,6 +1,6 @@
 [package]
 name = "equity-scanner"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A stock scanner for the equity market"
 authors = ["Luca Lapenna"]
