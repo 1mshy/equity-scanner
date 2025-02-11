@@ -1,4 +1,5 @@
-use crate::utils::formatter::historical_url;
+use crate::utils::formatter::{historical_url, year_url};
+use crate::utils::indicators::{calculate_rsi, rsi};
 use crate::utils::structs::HistoricalData;
 use reqwest::Client;
 use serde_json::Value;
@@ -11,6 +12,7 @@ pub struct YahooFinanceClient {
     crumb: Option<String>,
     last_refresh: Option<Instant>,
 }
+
 impl YahooFinanceClient {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
         let client = Client::builder()
@@ -55,13 +57,15 @@ impl YahooFinanceClient {
         &mut self,
         ticker: &str,
     ) -> Result<HistoricalData, Box<dyn Error>> {
-        let request = self.crumbed_request(&historical_url(ticker)).await?;
-        Ok(HistoricalData::new(&request))
+        let request = self.crumbed_request(&year_url(ticker)).await?;
+        let historical_data = HistoricalData::new(&request);
+        Ok(historical_data)
     }
     /// Uses current data and formats it into HistoricalData
-    pub async fn from_historical(&mut self, data:&str) -> Result<HistoricalData, Box<dyn Error>> {
+    pub async fn from_historical(&mut self, data: &str) -> Result<HistoricalData, Box<dyn Error>> {
         let data = &serde_json::from_str(data)?;
-        Ok(HistoricalData::new(data))
+        let historical_data = HistoricalData::new(data);
+        Ok(historical_data)
     }
     /// Fetches a summary of what the company behind the ticker does.
     pub async fn fetch_quote_summary(&mut self, symbol: &str) -> Result<Value, Box<dyn Error>> {
@@ -90,5 +94,20 @@ impl YahooFinanceClient {
 
         let text = response.text().await?;
         Ok(serde_json::from_str(&text)?)
+    }
+
+    pub fn current_rsi(&mut self, historical_data: &HistoricalData, window: usize) -> Result<f64, Box<dyn Error>> {
+        let all_rsi_vals = calculate_rsi(&historical_data.close, window);
+        Ok(all_rsi_vals.last().unwrap().clone())
+    }
+
+    pub async fn analyse(
+        &mut self,
+        historical_data: &HistoricalData,
+    ) -> Result<bool, Box<dyn Error>> {
+        println!("fdsfsdf");
+        let rsa_vals = rsi(&historical_data.close, 14);
+        // println!("{:?}", rsa_vals);
+        Ok(true)
     }
 }

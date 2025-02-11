@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::utils;
 
 pub const YAHOO_BASE_URL: &str = "https://query1.finance.yahoo.com/v8/finance/chart/";
@@ -9,4 +10,8 @@ pub fn historical_url(ticker: &str) -> String {
         ticker,
         utils::time::current_unix_time()
     )
+}
+
+pub fn year_url(ticker: &str) -> String {
+    format!("{}{}?range=1y&interval=1d", YAHOO_BASE_URL, ticker)
 }
