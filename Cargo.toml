@@ -8,7 +8,7 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/1mshy/equity-scanner"
 keywords = ["stock", "scanner", "equity", "market"]
-categories = ["finance", "tools"]
+categories = ["finance"]
 
 
 [dependencies]
