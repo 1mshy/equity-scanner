@@ -12,6 +12,7 @@ categories = ["finance"]
 
 
 [dependencies]
+clap = { version = "4.5.29", features = ["derive"] }
 reqwest = { version = "0.12.12", features = ["cookies", "json"] }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1"
@@ -20,3 +21,11 @@ tokio = { version = "1.43.0", features = ["full"] }
 [[example]]
 name = "aapl"
 path = "examples/aapl.rs"
+
+[lib]
+name = "equity_scanner"
+path = "src/lib.rs"
+
+[[bin]]
+name = "equity_scanner"
+path = "src/cli/main.rs"
