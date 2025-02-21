@@ -12,6 +12,8 @@ pub struct YahooFinanceClient {
     crumb: Option<String>,
     last_refresh: Option<Instant>,
 }
+#[derive(Debug)]
+pub struct InvalidRequest;
 
 impl YahooFinanceClient {
     pub async fn new() -> Result<Self, Box<dyn Error>> {

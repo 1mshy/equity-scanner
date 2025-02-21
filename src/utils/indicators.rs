@@ -1,7 +1,13 @@
-pub fn calculate_rsi(prices: &Vec<f64>, period: usize) -> Vec<f64> {
+use crate::equity::InvalidData;
+
+pub fn calculate_rsi(prices: &Vec<f64>, period: usize) -> Result<Vec<f64>, InvalidData> {
     let mut rsi_values = Vec::new();
     let mut avg_gain = 0.0;
     let mut avg_loss = 0.0;
+
+    if prices.len() <= period {
+        return Err(InvalidData);
+    }
 
     for i in 1..=period {
         let change = prices[i] - prices[i - 1];
@@ -31,5 +37,9 @@ pub fn calculate_rsi(prices: &Vec<f64>, period: usize) -> Vec<f64> {
         rsi_values.push(rsi);
     }
 
-    rsi_values
+    Ok(rsi_values)
+}
+
+pub fn max(sizes: &[usize]) -> usize {
+    *sizes.iter().max().unwrap()
 }

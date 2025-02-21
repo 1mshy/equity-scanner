@@ -60,7 +60,14 @@ async fn main() {
                 };
                 let equity_config = config.get_equity(&symbol);
 
-                let current_rsi = equity_data.current_default_rsi() as f32;
+                let current_rsi = match equity_data.current_default_rsi() {
+                    Ok(current_rsi) => current_rsi as f32,
+                    Err(e) => {
+                        println!("Error fetching data for {}, skipping", symbol);
+                        println!("{}", e);
+                        continue;
+                    }
+                };
 
                 if current_rsi < equity_config.rsi_lower_limit {
                     println!("{}", equity_config)

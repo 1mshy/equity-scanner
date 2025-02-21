@@ -21,7 +21,7 @@ async fn main() {
     let current_rsi = equity.current_rsi(14);
     println!("Current rsi: {:?}", current_rsi);
 
-    println!("Is overbought:{}", equity.is_overvalued())
+    println!("Is overbought:{}", equity.is_overvalued().unwrap())
 
     // println!("{:?}", client);
     // println!("{:?}", output);
