@@ -3,19 +3,19 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MarketData {
-    symbol: String,
-    name: String,
-    lastsale: String,
-    netchange: String,
-    pctchange: String,
+    pub symbol: String,
+    pub name: String,
+    pub lastsale: String,
+    pub netchange: String,
+    pub pctchange: String,
     #[serde(rename = "marketCap")] // name from the nasdaq api
-    market_cap: Option<String>,
-    country: String,
-    ipoyear: Option<String>,
-    volume: String,
-    sector: String,
-    industry: String,
-    url: String,
+    pub market_cap: Option<String>,
+    pub country: String,
+    pub ipoyear: Option<String>,
+    pub volume: String,
+    pub sector: String,
+    pub industry: String,
+    pub url: String,
 }
 
 #[derive(Debug, Deserialize)]

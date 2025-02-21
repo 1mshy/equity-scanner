@@ -1,7 +1,10 @@
+pub mod config;
 pub mod nasdaq;
 
 use clap::{Parser, Subcommand};
-use nasdaq::{market_overview, MarketData};
+use config::Config;
+use equity_scanner::client::YahooFinanceClient;
+use nasdaq::market_overview;
 
 #[derive(Parser)]
 #[command(name = "equity-scanner")]
@@ -10,18 +13,18 @@ use nasdaq::{market_overview, MarketData};
 struct Cli {
     #[command(subcommand)]
     cmd: Commands,
-    #[arg(long)]
+    #[arg(short, long)]
     webhook: Option<String>,
 }
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
     Get {
-        key: String,
+        symbol: String,
     },
     Set {
-        key: String,
-        value: String,
-        is_true: bool,
+        symbol: String,
+        rsi_upper_limit: f32,
+        rsi_lower_limit: f32,
     },
     All,
 }
@@ -41,18 +44,45 @@ async fn main() {
             Vec::new()
         }
     };
+    let mut config = Config::new();
+    let mut client = YahooFinanceClient::new().await.unwrap();
 
     match args.cmd {
         Commands::All => {
             for row in market_data {
-                println!("{:#?}", row)
+                let symbol = row.symbol;
+                println!("{}", symbol);
+                let mut equity_data = match client.fetch_historical(&symbol).await {
+                    Ok(equity_data) => equity_data,
+                    Err(_) => {
+                        continue;
+                    }
+                };
+                let equity_config = config.get_equity(&symbol);
+
+                let current_rsi = equity_data.current_default_rsi() as f32;
+
+                if current_rsi < equity_config.rsi_lower_limit {
+                    println!("{}", equity_config)
+                } else if current_rsi > equity_config.rsi_upper_limit {
+                    println!("{}", equity_config)
+                    
+                }
+                
+
             }
         }
-        Commands::Get { key } => {}
+        Commands::Get { symbol } => {
+            let equity = config.get_equity(&symbol);
+            println!("{}", equity);
+        }
         Commands::Set {
-            key,
-            value,
-            is_true,
-        } => {}
+            symbol,
+            rsi_upper_limit,
+            rsi_lower_limit,
+        } => {
+            config.set_equity(&symbol, rsi_upper_limit, rsi_lower_limit);
+            println!("{:#?}", config);
+        }
     }
 }
