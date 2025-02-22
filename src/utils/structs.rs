@@ -20,9 +20,8 @@ impl HistoricalData {
 
         let result = match data {
             Some(result) => result,
-            None => return Self::default()
+            None => return Self::default(),
         };
-
 
         let metadata = result.get("meta").cloned().unwrap_or_default();
 

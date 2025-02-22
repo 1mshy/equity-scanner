@@ -1,8 +1,10 @@
 pub mod config;
+pub mod discord;
 pub mod nasdaq;
 
 use clap::{Parser, Subcommand};
 use config::Config;
+use discord::send_stock_message;
 use equity_scanner::client::YahooFinanceClient;
 use nasdaq::market_overview;
 
@@ -75,10 +77,11 @@ async fn main() {
                     println!("{}", equity_config)
                 } else if current_rsi > equity_config.rsi_upper_limit {
                     println!("{}", equity_config)
-                    
                 }
-                
-
+                let summary = client.fetch_quote_summary(&symbol).await.unwrap();
+                println!("{:#?}", summary);
+                let url: &str = &config.get_webhook();
+                send_stock_message(url, &symbol, 100.0, 50.0, current_rsi as f64).await;
             }
         }
         Commands::Get { symbol } => {

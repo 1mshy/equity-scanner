@@ -1,6 +1,7 @@
 use crate::equity::Equity;
 use crate::utils::formatter::year_url;
 use crate::utils::structs::HistoricalData;
+use crate::utils::yahoo::ApiResponse;
 use reqwest::Client;
 use serde_json::Value;
 use std::error::Error;
@@ -69,7 +70,10 @@ impl YahooFinanceClient {
     //     })
     // }
     /// Fetches a summary of what the company behind the ticker does.
-    pub async fn fetch_quote_summary(&mut self, symbol: &str) -> Result<Value, Box<dyn Error>> {
+    pub async fn fetch_quote_summary(
+        &mut self,
+        symbol: &str,
+    ) -> Result<ApiResponse, Box<dyn Error>> {
         self.ensure_crumb_valid().await?;
 
         let crumb = self.crumb.as_ref().ok_or("Crumb not found")?;
@@ -78,7 +82,9 @@ impl YahooFinanceClient {
             symbol, crumb
         );
 
-        self.crumbed_request(&url).await
+        let response = self.crumbed_request(&url).await?;
+        print!("{:#?}", response);
+        Ok(serde_json::from_value::<ApiResponse>(response)?)
     }
 
     async fn crumbed_request(&mut self, url: &str) -> Result<Value, Box<dyn Error>> {
