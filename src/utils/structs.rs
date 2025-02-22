@@ -13,11 +13,16 @@ pub struct HistoricalData {
 
 impl HistoricalData {
     pub fn new(yahoo_raw: &Value) -> Self {
-        let result = yahoo_raw
+        let data = yahoo_raw
             .get("chart")
             .and_then(|c| c.get("result"))
-            .and_then(|r| r.get(0))
-            .unwrap();
+            .and_then(|r| r.get(0));
+
+        let result = match data {
+            Some(result) => result,
+            None => return Self::default()
+        };
+
 
         let metadata = result.get("meta").cloned().unwrap_or_default();
 
