@@ -33,10 +33,6 @@ enum Commands {
 async fn main() {
     let args = Cli::parse();
 
-    if let Some(webhook_url) = &args.webhook {
-        println!("Using webhook: {}", webhook_url)
-    }
-
     let market_data = match market_overview().await {
         Ok(data) => data,
         Err(err) => {
@@ -46,6 +42,12 @@ async fn main() {
     };
     let mut config = Config::new();
     let mut client = YahooFinanceClient::new().await.unwrap();
+
+    if let Some(webhook_url) = &args.webhook {
+        println!("Using webhook: {}", webhook_url);
+        config.set_webhook(webhook_url);
+        println!("Set webhook as default in config");
+    }
 
     match args.cmd {
         Commands::All => {

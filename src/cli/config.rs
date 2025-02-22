@@ -6,7 +6,6 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use serde_json::Map;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EquityConfig {
@@ -44,6 +43,7 @@ impl EquityConfig {
 pub struct Config {
     equities: HashMap<String, EquityConfig>,
     repeat: bool, // Should the problem run in a loop
+    webhook_url: String,
 }
 // public commands
 impl Config {
@@ -72,6 +72,14 @@ impl Config {
             }
         };
         equity
+    }
+
+    pub fn get_webhook(&mut self) -> String {
+        self.webhook_url.clone()
+    }
+
+    pub fn set_webhook(&mut self, webhook_url: &str) {
+        self.webhook_url = webhook_url.into();
     }
 }
 // config commands
