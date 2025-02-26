@@ -55,7 +55,7 @@ impl Config {
         equity_config.symbol = symbol.to_uppercase();
         equity_config.rsi_upper_limit = rsi_upper_limit;
         equity_config.rsi_lower_limit = rsi_lower_limit;
-        _ = self.write();
+        self.save_config();
     }
     pub fn add_equity(&mut self, equity_config: EquityConfig) {
         self.equities
@@ -80,6 +80,11 @@ impl Config {
 
     pub fn set_webhook(&mut self, webhook_url: &str) {
         self.webhook_url = webhook_url.into();
+        self.save_config();
+    }
+
+    pub fn save_config(&mut self) {
+        _ = self.write();
     }
 }
 // config commands
