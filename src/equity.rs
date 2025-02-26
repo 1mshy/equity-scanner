@@ -46,6 +46,14 @@ impl Equity {
     pub fn is_overvalued(&mut self) -> Result<bool, InvalidData> {
         Ok(self.current_rsi(14).unwrap() > self.rsi_overvalued)
     }
+    pub fn current_price(&mut self) -> Result<f64, InvalidData> {
+        let closing = &self.historical_data.close;
+        Ok(closing[closing.len()-1])
+    }
+    pub fn price_change(&mut self) -> Result<f64, InvalidData> {
+        let closing = &self.historical_data.close;
+        Ok(closing[closing.len()-1] - closing[closing.len()-2])
+    }
 }
 
 impl Display for Equity {

@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
 use config::Config;
 use discord::send_stock_message;
 use equity_scanner::client::YahooFinanceClient;
-use nasdaq::market_overview;
+use nasdaq::{market_cap_filter, market_overview};
 use tokio::time::sleep;
 
 #[derive(Parser)]
@@ -39,7 +39,11 @@ async fn main() {
     let args = Cli::parse();
 
     let market_data = match market_overview().await {
-        Ok(data) => data,
+        Ok(data) => {
+            const MIN_MARKET_CAP: f64 = 10_000_000_000.0;
+            let big_companies = market_cap_filter(data, MIN_MARKET_CAP);
+            big_companies
+        }
         Err(err) => {
             eprintln!("Error fetching market data: {}", err);
             Vec::new()
@@ -89,7 +93,14 @@ async fn main() {
                             continue;
                         }
                     };
-                    send_stock_message(&webhook_url, &symbol, 100.0, 50.0, current_rsi as f64).await;
+                    send_stock_message(
+                        &webhook_url,
+                        &symbol,
+                        equity_data.current_price().unwrap(),
+                        equity_data.price_change().unwrap(),
+                        current_rsi as f64,
+                    )
+                    .await;
                 }
                 sleep(Duration::from_secs(1)).await;
             }

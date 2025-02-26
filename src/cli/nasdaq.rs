@@ -46,3 +46,18 @@ pub async fn market_overview() -> Result<Vec<MarketData>, reqwest::Error> {
 
     Ok(api_response.data.map_or_else(Vec::new, |d| d.rows))
 }
+
+pub fn market_cap_filter(data: Vec<MarketData>, min_market_cap: f64) -> Vec<MarketData> {
+    let new_data: Vec<MarketData> = data
+        .into_iter()
+        .filter(|ticker_data| {
+            ticker_data
+                .market_cap
+                .as_ref()
+                .and_then(|market_cap| market_cap.parse::<f64>().ok())
+                .map_or(false, |market_cap| market_cap > min_market_cap)
+        })
+        .collect();
+
+    new_data
+}

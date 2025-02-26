@@ -2,8 +2,7 @@ use webhook::client::WebhookClient;
 
 const IMAGE_URL: &str = "https://imgs.search.brave.com/l9f00WuduVvIDIWPmchBqoorwMrPAipevjqxy16CH3Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTQ3/Mzc3MTY0Ni9waG90/by9hLXlvdW5nLW1h/bi1idXlzLWEtbmV3/LWNhci5qcGc_cz02/MTJ4NjEyJnc9MCZr/PTIwJmM9b0xiaTJr/ZVNnOGc4LUdTbEpR/MHdxSHotbEFodDhy/cXhhRVF5dml1eURQ/az0"; // Use a relevant image
 
-pub async fn send_stock_message(url: &str, ticker: &str, price: f64, prev_price: f64, rsi: f64) {
-    let price_change = price - prev_price;
+pub async fn send_stock_message(url: &str, ticker: &str, price: f64, price_change: f64, rsi: f64) {
     let price_emoji = if price_change > 0.0 {
         "📈"
     } else if price_change < 0.0 {
@@ -45,7 +44,7 @@ pub async fn send_stock_message(url: &str, ticker: &str, price: f64, prev_price:
                             &format!(
                                 "${:.2} ({:.2}%)",
                                 price,
-                                (price_change / prev_price) * 100.0
+                                (price_change / price) * 100.0
                             ),
                             true,
                         )
