@@ -1,6 +1,6 @@
 [package]
 name = "equity-scanner"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A stock scanner for the equity market"
 authors = ["Luca Lapenna"]
@@ -9,6 +9,21 @@ readme = "README.md"
 repository = "https://github.com/1mshy/equity-scanner"
 keywords = ["stock", "scanner", "equity", "market"]
 categories = ["finance"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.dev]
+incremental = true # Compile your binary in smaller steps.
+codegen-units = 256 # Allows LLVM to perform better optimization.
+opt-level = 3 # Prioritizes small binary size. Use `3` if you prefer speed.
+strip = false # Ensures debug symbols are kept.
+
+[profile.release]
+incremental = true # Compile your binary in smaller steps.
+codegen-units = 256 # Allows LLVM to perform better optimization.
+lto = true # Enables link-time-optimizations.
+opt-level = "s" # Prioritizes small binary size. Use `3` if you prefer speed.
+panic = "abort" # Higher performance by disabling panic handlers.
+strip = true # Ensures debug symbols are removed.
 
 
 [dependencies]
