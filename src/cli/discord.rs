@@ -21,7 +21,7 @@ pub async fn send_stock_message(url: &str, ticker: &str, price: f64, prev_price:
     };
 
     let client: WebhookClient = WebhookClient::new(url);
-    client
+    let discord_request = client
         .send(|message| {
             message
                 .username("Stock Bot 🚀")
@@ -57,6 +57,12 @@ pub async fn send_stock_message(url: &str, ticker: &str, price: f64, prev_price:
                         )
                 })
         })
-        .await
-        .unwrap();
+        .await;
+
+    match discord_request {
+        Ok(_) => println!("Discord request successfull"),
+        Err(e) => {
+            println!("Error with discord request:\n{}", e)
+        }
+    };
 }

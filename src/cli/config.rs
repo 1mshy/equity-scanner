@@ -43,7 +43,7 @@ impl EquityConfig {
 pub struct Config {
     equities: HashMap<String, EquityConfig>,
     repeat: bool, // Should the problem run in a loop
-    webhook_url: String,
+    webhook_url: Option<String>,
 }
 // public commands
 impl Config {
@@ -61,7 +61,8 @@ impl Config {
         self.equities
             .insert(equity_config.symbol.clone(), equity_config);
     }
-
+    /// Get the saved equity config.
+    /// If there is none, one will be created and saved.
     pub fn get_equity(&mut self, symbol: &str) -> EquityConfig {
         let equity = match self.equities.get(&symbol.to_uppercase()) {
             Some(equity_config) => equity_config.clone(),
@@ -74,12 +75,12 @@ impl Config {
         equity
     }
 
-    pub fn get_webhook(&mut self) -> String {
-        self.webhook_url.clone()
+    pub fn get_webhook(&mut self) -> &Option<String> {
+        &mut self.webhook_url
     }
 
     pub fn set_webhook(&mut self, webhook_url: &str) {
-        self.webhook_url = webhook_url.into();
+        self.webhook_url = Some(webhook_url.into());
         self.save_config();
     }
 

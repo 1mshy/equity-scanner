@@ -2,11 +2,14 @@ pub mod config;
 pub mod discord;
 pub mod nasdaq;
 
+use std::time::Duration;
+
 use clap::{Parser, Subcommand};
 use config::Config;
 use discord::send_stock_message;
 use equity_scanner::client::YahooFinanceClient;
 use nasdaq::market_overview;
+use tokio::time::sleep;
 
 #[derive(Parser)]
 #[command(name = "equity-scanner")]
@@ -73,15 +76,22 @@ async fn main() {
                     }
                 };
 
-                if current_rsi < equity_config.rsi_lower_limit {
-                    println!("{}", equity_config)
-                } else if current_rsi > equity_config.rsi_upper_limit {
-                    println!("{}", equity_config)
+                if current_rsi < equity_config.rsi_lower_limit
+                    || current_rsi > equity_config.rsi_upper_limit
+                {
+                    let summary = client.fetch_quote_summary(&symbol).await.unwrap();
+                    println!("{:#?}", summary);
+                    let webhook_url = match &config.get_webhook() {
+                        Some(webhook) => webhook.clone(),
+                        None => {
+                            println!("No webhook found, thus cannot send webhook message.");
+                            println!("Do some digging on {}", &symbol);
+                            continue;
+                        }
+                    };
+                    send_stock_message(&webhook_url, &symbol, 100.0, 50.0, current_rsi as f64).await;
                 }
-                let summary = client.fetch_quote_summary(&symbol).await.unwrap();
-                println!("{:#?}", summary);
-                let url: &str = &config.get_webhook();
-                send_stock_message(url, &symbol, 100.0, 50.0, current_rsi as f64).await;
+                sleep(Duration::from_secs(1)).await;
             }
         }
         Commands::Get { symbol } => {
@@ -89,7 +99,7 @@ async fn main() {
             match client.fetch_historical(&symbol).await {
                 Ok(data) => {
                     println!("{}", data)
-                },
+                }
                 Err(e) => {
                     println!("{}", e);
                 }
