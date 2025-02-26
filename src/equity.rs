@@ -50,6 +50,7 @@ impl Equity {
 
 impl Display for Equity {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.ticker)
+        let closing_price = self.historical_data.close[self.historical_data.close.len()-1];
+        write!(f, "{} at {}", self.ticker, closing_price)
     }
 }

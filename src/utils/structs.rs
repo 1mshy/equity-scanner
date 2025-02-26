@@ -1,5 +1,5 @@
 use serde_json::Value;
-
+/// NOTE: datapoints are from old to new
 #[derive(Debug, Clone, Default)]
 pub struct HistoricalData {
     pub metadata: Value,

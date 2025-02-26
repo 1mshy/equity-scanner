@@ -86,7 +86,15 @@ async fn main() {
         }
         Commands::Get { symbol } => {
             let equity = config.get_equity(&symbol);
-            println!("{}", equity);
+            match client.fetch_historical(&symbol).await {
+                Ok(data) => {
+                    println!("{}", data)
+                },
+                Err(e) => {
+                    println!("{}", e);
+                }
+            }
+            println!("Config:\n{}", equity);
         }
         Commands::Set {
             symbol,
@@ -94,7 +102,8 @@ async fn main() {
             rsi_lower_limit,
         } => {
             config.set_equity(&symbol, rsi_upper_limit, rsi_lower_limit);
-            println!("{:#?}", config);
+            let aapl_config = config.get_equity(&symbol);
+            println!("{}", aapl_config);
         }
     }
 }
