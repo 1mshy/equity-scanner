@@ -4,7 +4,7 @@ use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct MarketData {
+pub struct RawSimpleData {
     pub symbol: String,
     pub name: String,
     pub lastsale: String,
@@ -20,7 +20,7 @@ pub struct MarketData {
     pub url: String,
 }
 
-impl MarketData {
+impl RawSimpleData {
     /// converts the current market cap into f64.
     /// If it failed it will return 0
     fn get_market_cap_f64(&self) -> f64 {
@@ -36,10 +36,10 @@ struct ApiResponse {
 
 #[derive(Debug, Deserialize)]
 struct ApiData {
-    rows: Vec<MarketData>,
+    rows: Vec<RawSimpleData>,
 }
 
-pub async fn market_overview() -> Result<Vec<MarketData>, reqwest::Error> {
+pub async fn market_overview() -> Result<Vec<RawSimpleData>, reqwest::Error> {
     let mut headers = HeaderMap::new();
     headers.insert(
         USER_AGENT,
@@ -59,12 +59,12 @@ pub async fn market_overview() -> Result<Vec<MarketData>, reqwest::Error> {
 }
 
 pub fn filter(
-    data: Vec<MarketData>,
+    data: Vec<RawSimpleData>,
     min_market_cap: Option<u64>,
     take_first: Option<u64>,
-) -> Vec<MarketData> {
+) -> Vec<RawSimpleData> {
     let min_market_cap = min_market_cap.unwrap_or(0) as f64;
-    let mut new_data: Vec<MarketData> = data
+    let mut new_data: Vec<RawSimpleData> = data
         .into_iter()
         .filter(|ticker_data| ticker_data.get_market_cap_f64() > min_market_cap)
         .collect();
@@ -84,8 +84,8 @@ pub fn filter(
     new_data
 }
 
-pub fn market_cap_filter(data: Vec<MarketData>, min_market_cap: f64) -> Vec<MarketData> {
-    let new_data: Vec<MarketData> = data
+pub fn market_cap_filter(data: Vec<RawSimpleData>, min_market_cap: f64) -> Vec<RawSimpleData> {
+    let new_data: Vec<RawSimpleData> = data
         .into_iter()
         .filter(|ticker_data| ticker_data.get_market_cap_f64() > min_market_cap)
         .collect();

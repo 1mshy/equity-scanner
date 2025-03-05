@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 use config::Config;
 use discord::send_stock_message;
 use equity_scanner::client::YahooFinanceClient;
-use nasdaq::{filter, market_overview, MarketData};
+use nasdaq::{filter, market_overview, RawSimpleData};
 
 
 #[derive(Parser)]
@@ -41,7 +41,7 @@ enum Commands {
 async fn main() {
     let args = Cli::parse();
 
-    let market_data: Vec<MarketData> = match market_overview().await {
+    let market_data: Vec<RawSimpleData> = match market_overview().await {
         Ok(data) => {
             data
         }
