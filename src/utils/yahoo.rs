@@ -5,7 +5,6 @@ use serde::Deserialize;
 pub struct ApiResponse {
     pub quote_summary: Option<QuoteSummary>,
 }
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuoteSummary {

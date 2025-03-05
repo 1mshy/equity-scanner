@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
 use config::Config;
 use discord::send_stock_message;
 use equity_scanner::client::YahooFinanceClient;
-use nasdaq::{market_cap_filter, market_overview};
+use nasdaq::{filter, market_cap_filter, market_overview, MarketData};
 use tokio::time::sleep;
 
 #[derive(Parser)]
@@ -20,6 +20,10 @@ struct Cli {
     cmd: Commands,
     #[arg(short, long)]
     webhook: Option<String>,
+    #[arg(short, long)]
+    first: Option<u64>,
+    #[arg(short, long)]
+    market_cap: Option<u64>,
 }
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
@@ -38,17 +42,19 @@ enum Commands {
 async fn main() {
     let args = Cli::parse();
 
-    let market_data = match market_overview().await {
+    let market_data: Vec<MarketData> = match market_overview().await {
         Ok(data) => {
-            const MIN_MARKET_CAP: f64 = 10_000_000_000.0;
-            let big_companies = market_cap_filter(data, MIN_MARKET_CAP);
-            big_companies
+            data
         }
         Err(err) => {
             eprintln!("Error fetching market data: {}", err);
             Vec::new()
         }
     };
+
+    println!("{}", market_data.len());
+    let filtered_market_data = filter(market_data, args.market_cap, args.first);
+    println!("{}", filtered_market_data.len());
     let mut config = Config::new();
     let mut client = YahooFinanceClient::new().await.unwrap();
 
@@ -60,7 +66,7 @@ async fn main() {
 
     match args.cmd {
         Commands::All => {
-            for row in market_data {
+            for row in filtered_market_data {
                 let symbol = row.symbol;
                 println!("{}", symbol);
                 let mut equity_data = match client.fetch_historical(&symbol).await {
@@ -84,12 +90,15 @@ async fn main() {
                     || current_rsi > equity_config.rsi_upper_limit
                 {
                     let summary = client.fetch_quote_summary(&symbol).await.unwrap();
-                    println!("{:#?}", summary);
+                    // println!("{:#?}", summary);
                     let webhook_url = match &config.get_webhook() {
                         Some(webhook) => webhook.clone(),
                         None => {
-                            println!("No webhook found, thus cannot send webhook message.");
-                            println!("Do some digging on {}", &symbol);
+                            println!("No webhook URL found. To set up a webhook:");
+                            println!("1. Create a Discord webhook URL in your server's channel settings");
+                            println!("2. Run the program with the --webhook flag:");
+                            println!("   equity-scanner --webhook YOUR_WEBHOOK_URL [command]");
+                            println!("\nSkipping notification for symbol: {}", &symbol);
                             continue;
                         }
                     };
