@@ -33,9 +33,10 @@ impl Default for EquityConfig {
 }
 impl EquityConfig {
     fn default_symbol(symbol: &str) -> Self {
-        let mut equity = EquityConfig::default();
-        equity.symbol = symbol.to_uppercase();
-        equity
+        EquityConfig {
+            symbol: symbol.to_uppercase(),
+            ..Default::default()
+        }
     }
 }
 
@@ -51,7 +52,7 @@ impl Config {
         let equity_config = self
             .equities
             .entry(symbol.to_uppercase())
-            .or_insert_with(EquityConfig::default);
+            .or_default();
         equity_config.symbol = symbol.to_uppercase();
         equity_config.rsi_upper_limit = rsi_upper_limit;
         equity_config.rsi_lower_limit = rsi_lower_limit;
@@ -91,11 +92,8 @@ impl Config {
 // config commands
 impl Config {
     pub fn new() -> Self {
-        match Self::read() {
-            Ok(config) => return config,
-            Err(_) => {}
-        }
-        return Config::new();
+        if let Ok(config) = Self::read() { return config }
+        Config::new()
     }
 
     fn write(&mut self) -> Result<(), Box<dyn std::error::Error>> {

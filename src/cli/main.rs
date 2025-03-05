@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
 use config::Config;
 use discord::send_stock_message;
 use equity_scanner::client::YahooFinanceClient;
-use nasdaq::{filter, market_cap_filter, market_overview, MarketData};
+use nasdaq::{filter, market_overview, MarketData};
 use tokio::time::sleep;
 
 #[derive(Parser)]
@@ -111,7 +111,7 @@ async fn main() {
                     )
                     .await;
                 }
-                sleep(Duration::from_secs(1)).await;
+                // sleep(Duration::from_secs(1)).await;
             }
         }
         Commands::Get { symbol } => {

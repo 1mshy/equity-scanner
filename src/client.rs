@@ -83,7 +83,6 @@ impl YahooFinanceClient {
         );
 
         let response = self.crumbed_request(&url).await?;
-        print!("{:#?}", response);
         Ok(serde_json::from_value::<ApiResponse>(response)?)
     }
 

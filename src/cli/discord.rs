@@ -1,3 +1,6 @@
+use std::{thread::sleep, time::Duration};
+
+use serde::Deserialize;
 use webhook::client::WebhookClient;
 
 const IMAGE_URL: &str = "https://imgs.search.brave.com/l9f00WuduVvIDIWPmchBqoorwMrPAipevjqxy16CH3Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTQ3/Mzc3MTY0Ni9waG90/by9hLXlvdW5nLW1h/bi1idXlzLWEtbmV3/LWNhci5qcGc_cz02/MTJ4NjEyJnc9MCZr/PTIwJmM9b0xiaTJr/ZVNnOGc4LUdTbEpR/MHdxSHotbEFodDhy/cXhhRVF5dml1eURQ/az0"; // Use a relevant image
@@ -59,9 +62,30 @@ pub async fn send_stock_message(url: &str, ticker: &str, price: f64, price_chang
         .await;
 
     match discord_request {
-        Ok(_) => println!("Discord request successfull"),
+        Ok(_) => println!("Discord request successfull for {}", ticker),
         Err(e) => {
-            println!("Error with discord request:\n{}", e)
+            println!("Error with discord request:\n{}", e);
+            let message = e.to_string();
+            println!("message");
+            println!("{}", message);
+            let json_message = 
+            match serde_json::from_str::<RateLimited>(&message) {
+                Ok(json_message) => json_message,
+                Err(_) => {
+                    return;
+                }   
+            };
+            let wait_time = json_message.retry_after;
+            println!("Going to wait {} due to discord rate limit", wait_time);
+            sleep(Duration::from_secs_f64(wait_time));
+            let _ = send_stock_message(url, ticker, price, price_change, rsi);
         }
     };
+}
+#[allow(dead_code)]
+#[derive(Deserialize)]
+struct RateLimited {
+    message: String,
+    retry_after: f64,
+    global: bool,
 }

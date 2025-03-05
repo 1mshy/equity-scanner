@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +18,18 @@ pub struct MarketData {
     pub sector: String,
     pub industry: String,
     pub url: String,
+}
+
+impl MarketData {
+    /// converts the current market cap into f64.
+    /// If it failed it will return 0
+    fn get_market_cap_f64(&self) -> f64 {
+        let str_num = self.market_cap.clone().unwrap_or("".to_string());
+        match str_num.parse::<f64>() {
+            Ok(num) => num,
+            Err(_) => 0.0,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -53,29 +67,20 @@ pub fn filter(
     first: Option<u64>,
 ) -> Vec<MarketData> {
     let min_market_cap = min_market_cap.unwrap_or(0) as f64;
-    let new_data: Vec<MarketData> = data
+    let mut take_first = data.len();
+    let mut new_data: Vec<MarketData> = data
         .into_iter()
-        .filter(|ticker_data| {
-            ticker_data
-                .market_cap
-                .as_ref()
-                .and_then(|market_cap| market_cap.parse::<f64>().ok())
-                .map_or(false, |market_cap| market_cap > min_market_cap)
-        })
+        .filter(|ticker_data| ticker_data.get_market_cap_f64() > min_market_cap)
         .collect();
+    new_data
+    .sort_by(|a,b| b.get_market_cap_f64().partial_cmp(&a.get_market_cap_f64()).unwrap_or(Ordering::Equal));
     new_data
 }
 
 pub fn market_cap_filter(data: Vec<MarketData>, min_market_cap: f64) -> Vec<MarketData> {
     let new_data: Vec<MarketData> = data
         .into_iter()
-        .filter(|ticker_data| {
-            ticker_data
-                .market_cap
-                .as_ref()
-                .and_then(|market_cap| market_cap.parse::<f64>().ok())
-                .map_or(false, |market_cap| market_cap > min_market_cap)
-        })
+        .filter(|ticker_data| ticker_data.get_market_cap_f64() > min_market_cap)
         .collect();
 
     new_data
