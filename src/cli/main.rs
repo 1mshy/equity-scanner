@@ -2,14 +2,13 @@ pub mod config;
 pub mod discord;
 pub mod nasdaq;
 
-use std::time::Duration;
 
 use clap::{Parser, Subcommand};
 use config::Config;
 use discord::send_stock_message;
 use equity_scanner::client::YahooFinanceClient;
 use nasdaq::{filter, market_overview, MarketData};
-use tokio::time::sleep;
+
 
 #[derive(Parser)]
 #[command(name = "equity-scanner")]
